@@ -1,0 +1,11 @@
+{
+    "connection": {
+      "secure": true,
+      "reconnect": true
+    },
+      "identity": {
+        "username": "synctalker",
+        "password": "ps6674qwpgythksch9rr9divxqlang"
+  },
+      "channels": [ "Ramee" ]
+}

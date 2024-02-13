@@ -133,7 +133,6 @@ twur.onResub(({ broadcasterName, userDisplayName, months }) => {
   });
 });
 
-// Sub-Gift Event
 twur.onSubGift(({ broadcasterName, userDisplayName, months }) => {
   db.saveSubscription(broadcasterName, userDisplayName, months, (err, results) => {
     if (err) {
