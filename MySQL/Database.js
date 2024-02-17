@@ -11,7 +11,7 @@ class Database {
         console.error('Error connecting to MySQL: ' + err.stack);
         return;
       }
-      console.log('Connected to MySQL as id ' + this.connection.threadId);
+      console.log('Database 🟢 ' + this.connection.threadId);
     });
   }
 
@@ -25,7 +25,6 @@ class Database {
         callback(error);
         return;
       }
-      console.log('Subscription saved successfully:', results);
       callback(null, results);
     });
   }
