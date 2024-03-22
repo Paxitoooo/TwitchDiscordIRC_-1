@@ -11,45 +11,6 @@ dotenv.config();
 
 ////////////////////////////////
 
-import * as Sentry from "@sentry/node"
-import { ProfilingIntegration } from "@sentry/profiling-node"
-import express from "express";
-
-const app = express()
-
-Sentry.init({
-  dsn: "https://71fb760f959e4a02fa630b10d0255626@o4506773084045312.ingest.sentry.io/4506773086404608",
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Sentry.Integrations.Express({ app }),
-    new ProfilingIntegration(),
-  ],
-  tracesSampleRate: 1.0, 
-  profilesSampleRate: 1.0,
-});
-
-
-app.use(Sentry.Handlers.requestHandler())
-app.use(Sentry.Handlers.tracingHandler())
-app.get("/", function rootHandler(req, res) {
-  res.end()
-});
-
-app.use(Sentry.Handlers.errorHandler());
-
-app.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(res.sentry + "\n")
-});
-
-app.listen(3000)
-
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!")
-})
-
-////////////////////////////////
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,19 +29,15 @@ const authProvider = new StaticAuthProvider(clientId, accessToken);
 
 const twur = new Bot({
   authProvider,
-  channels: ["Broxah", "Posty", "trausi", "Crystalst", "uhSnow"],
-});
-
-twur.onConnect(() => {
-  console.log("Bot is listening in the following channels:", twur.channels);
+  channels: ["mg13gr", "gn_gortz1la"],
 });
 
 
 const bot = new eris.Client(process.env.DISCORD_TOKEN);
-const client = new tmi.Client(config);
+const ctmi = new tmi.Client(config);
 
 bot.connect();
-client.connect();
+ctmi.connect();
 
 var ChannelFollow = "1204856415391326258";
 var ChannelMessages = "1205995714493284432";
@@ -92,7 +49,7 @@ let subscriptionCount = 0;
 bot.on("ready", () => {
   console.log("Discord 🟢");
 });
-client.on("connected", () => {
+ctmi.on("connected", () => {
   console.log("Twitch 🟢");
 });
 
@@ -107,196 +64,188 @@ const db = new Database(dbConfig);
 db.connect();
 
 // Sub Event
-  twur.onSub(({ broadcasterName, userDisplayName, months }) => {
-    subscriptionCount++
-    db.saveSubscription(
-      broadcasterName,
-      userDisplayName,
-      months,
-      (err) => {
-        if (err) {
-          console.error("Error saving subscription:", err);
-          return;
-        }
-        bot.createMessage(ChannelSubs, {
-          embed: {
-            author: {
-              name: `Sub Event`,
-              url: "", // Twitch Broadcaster Channel
-              icon_url: "",
-            },
-            title: `${broadcasterName}`,
-            color: 15698175,
-            fields: [
-              {
-                name: `Viewer: ${userDisplayName}`,
-                value: `${months}`,
-                inline: true,
-              },
-            ],
-            footer: {
-              text: "S-Talk",
-              icon_url: "https://i.imgur.com/bahg37j.png",
-            },
-          },
-        });
+twur.onSub(({ broadcasterName, userDisplayName, months }) => {
+  subscriptionCount++
+  db.saveSubscription(
+    broadcasterName,
+    userDisplayName,
+    months,
+    (err) => {
+      if (err) {
+        console.error("Error saving subscription:", err);
+        return;
       }
-    );
-  });
+      bot.createMessage(ChannelSubs, {
+        embed: {
+          author: {
+            name: `Sub Event`,
+            url: "", // Twitch Broadcaster Channel
+            icon_url: "",
+          },
+          title: `${broadcasterName}`,
+          color: 15698175,
+          fields: [
+            {
+              name: `Viewer: ${userDisplayName}`,
+              value: `${months}`,
+              inline: true,
+            },
+          ],
+          footer: {
+            text: "S-Talk",
+            icon_url: "https://i.imgur.com/bahg37j.png",
+          },
+        },
+      });
+    }
+  );
+});
 
 // Re-Sub Event
-  twur.onResub(({ broadcasterName, userDisplayName, months }) => {
-    subscriptionCount++
-    db.saveSubscription(
-      broadcasterName,
-      userDisplayName,
-      months,
-      (err, results) => {
-        if (err) {
-          console.error("Error saving subscription:", err);
-          return;
-        }
-        bot.createMessage(ChannelSubs, {
-          embed: {
-            author: {
-              name: `Sub Event`,
-              url: "", // Twitch Broadcaster Channel
-              icon_url: "",
-            },
-            title: `${broadcasterName}`,
-            color: 15698175,
-            fields: [
-              {
-                name: `Viewer: ${userDisplayName}`,
-                value: `${months}`,
-                inline: true,
-              },
-            ],
-            footer: {
-              text: "S-Talk",
-              icon_url: "https://i.imgur.com/bahg37j.png",
-            },
-          },
-        });
+twur.onResub(({ broadcasterName, userDisplayName, months }) => {
+  subscriptionCount++
+  db.saveSubscription(
+    broadcasterName,
+    userDisplayName,
+    months,
+    (err, results) => {
+      if (err) {
+        console.error("Error saving subscription:", err);
+        return;
       }
-    );
-  });
-
-  twur.onSubGift(({ broadcasterName, userDisplayName, months }) => {
-    subscriptionCount++
-    db.saveSubscription(
-      broadcasterName,
-      userDisplayName,
-      months,
-      (err) => {
-        if (err) {
-          console.error("Error saving subscription:", err);
-          return;
-        }
-        bot.createMessage(ChannelSubs, {
-          embed: {
-            author: {
-              name: `Sub Event`,
-              url: "", // Twitch Broadcaster Channel
-              icon_url: "",
-            },
-            title: `${broadcasterName}`,
-            color: 15698175,
-            fields: [
-              {
-                name: `Viewer: ${userDisplayName}`,
-                value: `${months}`,
-                inline: true,
-              },
-            ],
-            footer: {
-              text: "S-Talk",
-              icon_url: "https://i.imgur.com/bahg37j.png",
-            },
+      bot.createMessage(ChannelSubs, {
+        embed: {
+          author: {
+            name: `Sub Event`,
+            url: "", // Twitch Broadcaster Channel
+            icon_url: "",
           },
-        });
+          title: `${broadcasterName}`,
+          color: 15698175,
+          fields: [
+            {
+              name: `Viewer: ${userDisplayName}`,
+              value: `${months}`,
+              inline: true,
+            },
+          ],
+          footer: {
+            text: "S-Talk",
+            icon_url: "https://i.imgur.com/bahg37j.png",
+          },
+        },
+      });
+    }
+  );
+});
+
+twur.onSubGift(({ broadcasterName, userDisplayName, months }) => {
+  subscriptionCount++
+  db.saveSubscription(
+    broadcasterName,
+    userDisplayName,
+    months,
+    (err) => {
+      if (err) {
+        console.error("Error saving subscription:", err);
+        return;
       }
-    );
-  });
-
-  // Moderator Timeout Action
-  twur.onTimeout(({ broadcasterName, userName, duration }) => {
-    bot.createMessage(ChannelModActions, {
-      embed: {
-        author: {
-          name: `Moderator Timeout Action`,
-          url: "", // Twitch Broadcaster Channel
-          icon_url: "", // Twitch Moderator Image Profle
-        },
-        title: `${broadcasterName}`,
-        color: 15698175,
-        fields: [
-          {
-            name: `Viewer : ${userName}`,
-            value: `${duration} Seconds Timeout`,
-            inline: true,
+      bot.createMessage(ChannelSubs, {
+        embed: {
+          author: {
+            name: `Sub Event`,
+            url: "", // Twitch Broadcaster Channel
+            icon_url: "",
           },
-        ],
-        footer: {
-          text: "S-Talk",
-          icon_url: "https://i.imgur.com/bahg37j.png",
-        },
-      },
-    });
-  });
-
-  twur.onBan(({ broadcasterName, userName, reason }) => {
-    bot.createMessage(ChannelModActions, {
-      embed: {
-        author: {
-          name: `Moderator Ban Action`,
-          url: "", // Twitch Broadcaster Channel
-          icon_url: "", // Twitch Moderator Image Profle
-        },
-        title: `${broadcasterName}`,
-        color: 15698175,
-        fields: [
-          {
-            name: `Viewer : ${userName}`,
-            value: `${reason}`,
-            inline: true,
+          title: `${broadcasterName}`,
+          color: 15698175,
+          fields: [
+            {
+              name: `Viewer: ${userDisplayName}`,
+              value: `${months}`,
+              inline: true,
+            },
+          ],
+          footer: {
+            text: "S-Talk",
+            icon_url: "https://i.imgur.com/bahg37j.png",
           },
-        ],
-        footer: {
-          text: "S-Talk",
-          icon_url: "https://i.imgur.com/bahg37j.png",
         },
+      });
+    }
+  );
+});
+
+// Moderator Timeout Action
+twur.onTimeout(({ broadcasterName, userName, duration }) => {
+  bot.createMessage(ChannelModActions, {
+    embed: {
+      author: {
+        name: `Moderator Timeout Action`,
+        url: "", // Twitch Broadcaster Channel
+        icon_url: "", // Twitch Moderator Image Profle
       },
+      title: `${broadcasterName}`,
+      color: 15698175,
+      fields: [
+        {
+          name: `Viewer : ${userName}`,
+          value: `${duration} Seconds Timeout`,
+          inline: true,
+        },
+      ],
+      footer: {
+        text: "S-Talk",
+        icon_url: "https://i.imgur.com/bahg37j.png",
+      },
+    },
   });
+});
+
+twur.onBan(({ broadcasterName, userName, reason }) => {
+  bot.createMessage(ChannelModActions, {
+    embed: {
+      author: {
+        name: `Moderator Ban Action`,
+        url: "", // Twitch Broadcaster Channel
+        icon_url: "", // Twitch Moderator Image Profle
+      },
+      title: `${broadcasterName}`,
+      color: 15698175,
+      fields: [
+        {
+          name: `Viewer : ${userName}`,
+          value: `${reason}`,
+          inline: true,
+        },
+      ],
+      footer: {
+        text: "S-Talk",
+        icon_url: "https://i.imgur.com/bahg37j.png",
+      },
+    },
+});
 })
 
 
+
 bot.on("messageCreate", async (msg) => {
-  // Check if the message content starts with "^user"
   if (msg.content.startsWith("^user")) {
     try {
-      // Extract the username from the command
       const commandParts = msg.content.split(" ");
-      const username = commandParts[1]; // Assuming the username is the second part of the command
+      const username = commandParts[1];
 
-      // Query the database to get the latest subscription information for the specified user
       db.getLatestSubscriptionByUser(username, (error, latestSubscription) => {
         if (error) {
           console.error("Error fetching subscription data:", error);
           bot.createMessage(msg.channel.id, "An error occurred while fetching subscription data.");
           return;
         }
-
-        // If there is no subscription data, inform the user
         if (!latestSubscription) {
           bot.createMessage(msg.channel.id, `No subscription data found for user ${username}.`);
           return;
         }
-
-        // Extract userDisplayName, months, timestamp, and broadcasterName from the latest subscription
         const { userDisplayName, months, timestamp, broadcasterName } = latestSubscription;
-
-        // Construct the response message in a similar format as the example provided
         const response = {
           embed: {
             author: {
@@ -335,12 +284,61 @@ bot.on("messageCreate", async (msg) => {
           },
         };
 
-        // Send the response message
         bot.createMessage(msg.channel.id, response);
       });
     } catch (error) {
       console.error("Error fetching subscription data:", error);
       bot.createMessage(msg.channel.id, "An error occurred while fetching subscription data.");
+    }
+  }
+});
+
+bot.on("messageCreate", async (msg) => {
+  if (msg.content.startsWith("^subscribers")) {
+    try {
+      db.countSubscribers((error, subscriberCount) => {
+        if (error) {
+          console.error("Error fetching subscriber count:", error);
+          bot.createMessage(msg.channel.id, "An error occurred while fetching subscriber count.");
+          return;
+        }
+        const response = `The number of subscribers to the broadcaster is: ${subscriberCount}`;
+        bot.createMessage(msg.channel.id, response);
+      });
+    } catch (error) {
+      console.error("Error fetching subscriber count:", error);
+      bot.createMessage(msg.channel.id, "An error occurred while fetching subscriber count.");
+    }
+  }
+});
+
+bot.on("messageCreate", async (msg) => {
+  if (msg.content.startsWith("^subscriberlist")) {
+    try {
+      db.getSubscribers((error, subscribers) => {
+        if (error) {
+          console.error("Error fetching subscriber list:", error);
+          bot.createMessage(msg.channel.id, "An error occurred while fetching subscriber list.");
+          return;
+        }
+        
+        const embed = {
+          embed: {
+            title: "List of Subscribers",
+            color: 0x00ff00, // Green color
+            description: "Here is the list of subscribers:",
+            fields: subscribers.map((subscriber, index) => ({
+              name: `${index + 1}.`,
+              value: subscriber.userDisplayName,
+              inline: true
+            }))
+          }
+        };
+        bot.createMessage(msg.channel.id, embed);
+      });
+    } catch (error) {
+      console.error("Error fetching subscriber list:", error);
+      bot.createMessage(msg.channel.id, "An error occurred while fetching subscriber list.");
     }
   }
 });
