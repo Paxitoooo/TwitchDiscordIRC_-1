@@ -65,6 +65,30 @@ class Database {
     });
   }
 
+  saveTimeout(broadcasterName, userName, duration, reason, callback) {
+    const query = 'INSERT INTO Timeouts (broadcasterName, userName, duration, reason) VALUES (?, ?, ?, ?)';
+    this.connection.query(query, [broadcasterName, userName, duration, reason], (error, results, fields) => {
+      if (error) {
+        console.error('Error saving timeout:', error);
+        callback(error);
+        return;
+      }
+      callback(null, results || {});
+    });
+  }
+
+  saveBan(broadcasterName, userName, reason, callback) {
+    const query = 'INSERT INTO Bans (broadcasterName, userName, reason) VALUES (?, ?, ?)';
+    this.connection.query(query, [broadcasterName, userName, reason], (error, results, fields) => {
+      if (error) {
+        console.error('Error saving ban:', error);
+        callback(error);
+        return;
+      }
+      callback(null, results || {});
+    });
+  }
+
 }
 
 module.exports = Database
